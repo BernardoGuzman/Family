@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reservas Familia</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; min-height: 100vh; }
+  .app { max-width: 480px; margin: 0 auto; padding: 16px 12px 60px; }
+  h2 { font-size: 22px; font-weight: 600; color: #1c1c1e; }
+  .subtitle { font-size: 11px; color: #8e8e93; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .prop-tabs { display: flex; gap: 8px; margin: 16px 0; }
+  .prop-tab { flex: 1; padding: 9px 4px; border-radius: 10px; border: 1px solid #e0e0e0; background: white; font-size: 13px; cursor: pointer; color: #555; transition: all .15s; }
+  .prop-tab.active { border: 2px solid #378ADD; background: #E6F1FB; color: #0C447C; font-weight: 600; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .month-nav { display: flex; gap: 8px; align-items: center; }
+  .month-nav button { background: none; border: none; font-size: 20px; cursor: pointer; color: #1c1c1e; padding: 0 4px; line-height: 1; }
+  .month-label { font-weight: 600; font-size: 15px; color: #1c1c1e; }
+  .actions { display: flex; gap: 6px; }
+  .btn-sm { font-size: 12px; padding: 6px 10px; border-radius: 8px; border: 1px solid #d0d0d0; background: white; cursor: pointer; color: #444; }
+  .btn-primary { font-size: 13px; padding: 6px 14px; border-radius: 8px; border: 1px solid #378ADD; background: #E6F1FB; color: #0C447C; font-weight: 600; cursor: pointer; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day-name { text-align: center; font-size: 11px; color: #8e8e93; padding: 4px 0; }
+  .cal-cell { min-height: 50px; border-radius: 8px; padding: 4px 3px; background: white; border: 0.5px solid #e8e8e8; }
+  .cal-cell.weekend { background: #f9f9f9; }
+  .cal-cell.today { background: #EEEDFE; border: 1.5px solid #7F77DD; }
+  .cal-cell.empty { background: transparent; border: none; }
+  .cal-num { font-size: 11px; color: #8e8e93; margin-bottom: 2px; }
+  .cal-cell.today .cal-num { color: #3C3489; font-weight: 600; }
+  .res-chip { font-size: 9px; border-radius: 3px; padding: 1px 3px; margin-bottom: 1px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; }
+  .list-item { background: white; border-radius: 12px; padding: 13px 15px; margin-bottom: 10px; border-left: 4px solid #ccc; }
+  .list-name { font-weight: 600; font-size: 14px; color: #1c1c1e; }
+  .list-dates { font-size: 12px; color: #8e8e93; margin-top: 3px; }
+  .list-note { font-size: 12px; color: #8e8e93; margin-top: 2px; font-style: italic; }
+  .badge { font-size: 11px; border-radius: 5px; padding: 2px 7px; margin-left: 6px; }
+  .btn-cancel { font-size: 11px; color: #A32D2D; background: #FCEBEB; border: none; border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+  .form-card { background: white; border-radius: 14px; padding: 18px; border: 0.5px solid #e0e0e0; }
+  .form-card h3 { font-size: 16px; font-weight: 600; color: #1c1c1e; margin-bottom: 14px; }
+  label { font-size: 12px; color: #8e8e93; display: block; margin-bottom: 3px; }
+  select, input[type=text], input[type=date] { width: 100%; padding: 9px 11px; border-radius: 9px; border: 1px solid #e0e0e0; font-size: 14px; background: white; margin-bottom: 12px; color: #1c1c1e; -webkit-appearance: none; }
+  .date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn-book { width: 100%; padding: 11px; border-radius: 10px; background: #0C447C; color: white; border: none; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+  .btn-back { width: 100%; padding: 11px; border-radius: 10px; background: white; color: #8e8e93; border: 1px solid #e0e0e0; font-size: 14px; cursor: pointer; margin-bottom: 8px; }
+  .toast { background: #EAF3DE; border: 1px solid #639922; color: #27500A; border-radius: 9px; padding: 9px 13px; font-size: 13px; margin-bottom: 12px; }
+  .toast.error { background: #FCEBEB; border-color: #E24B4A; color: #A32D2D; }
+  .legend { margin-top: 20px; border-top: 0.5px solid #e8e8e8; padding-top: 14px; }
+  .legend p { font-size: 11px; color: #8e8e93; margin-bottom: 8px; }
+  .legend-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .legend-chip { font-size: 11px; padding: 3px 9px; border-radius: 5px; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 999; }
+  .modal { background: white; border-radius: 16px; padding: 24px; width: 290px; }
+  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #1c1c1e; }
+  .modal p { font-size: 13px; color: #8e8e93; margin-bottom: 14px; }
+  .modal-btns { display: flex; gap: 8px; }
+  .modal-btns button { flex: 1; padding: 9px; border-radius: 9px; font-size: 13px; cursor: pointer; }
+  .modal-back { background: white; border: 1px solid #e0e0e0; color: #8e8e93; }
+  .modal-confirm { background: #A32D2D; color: white; border: none; font-weight: 600; }
+  .loading { text-align: center; padding: 40px 0; color: #8e8e93; font-size: 14px; }
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #34C759; margin-right: 5px; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .live-badge { display: flex; align-items: center; font-size: 11px; color: #27500A; background: #EAF3DE; border-radius: 5px; padding: 2px 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="subtitle">Familia</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h2>Reservas</h2>
+    <div class="live-badge"><span class="dot"></span>En vivo</div>
+  </div>
+
+  <div class="prop-tabs" id="propTabs"></div>
+
+  <div class="topbar">
+    <div class="month-nav">
+      <button onclick="prevMonth()">‹</button>
+      <span class="month-label" id="monthLabel"></span>
+      <button onclick="nextMonth()">›</button>
+    </div>
+    <div class="actions">
+      <button class="btn-sm" id="toggleViewBtn" onclick="toggleView()">Lista</button>
+      <button class="btn-primary" onclick="showForm()">+ Reservar</button>
+    </div>
+  </div>
+
+  <div id="toast" style="display:none"></div>
+  <div id="loading" class="loading">Cargando reservas...</div>
+  <div id="calView" style="display:none"></div>
+  <div id="listView" style="display:none"></div>
+  <div id="formView" style="display:none"></div>
+
+  <div class="legend">
+    <p>Familia</p>
+    <div class="legend-chips" id="legendChips"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="cancelModal" style="display:none">
+  <div class="modal">
+    <h3>Cancelar reserva</h3>
+    <p id="cancelModalMsg"></p>
+    <input type="text" id="pinInput" maxlength="3" placeholder="Primeras 3 letras de tu nombre" style="width:100%;margin-bottom:14px;padding:9px 11px;border-radius:9px;border:1px solid #e0e0e0;font-size:14px">
+    <div class="modal-btns">
+      <button class="modal-back" onclick="closeModal()">Volver</button>
+      <button class="modal-confirm" onclick="confirmCancel()">Cancelar reserva</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const cfg = {
+  apiKey: "AIzaSyBOZs3kNCXd6vXbP-g_5aRqk00tLoKGxdg",
+  authDomain: "family-316cd.firebaseapp.com",
+  databaseURL: "https://family-316cd-default-rtdb.firebaseio.com",
+  projectId: "family-316cd"
+};
+const app = initializeApp(cfg);
+const db = getDatabase(app);
+
+const MEMBERS = ["Papá","Mamá","Pach","Casilda","Marina","Pelón","Pablo"];
+const PROPS = ["Valle","JAMBO","111 J"];
+const ICONS = { "Valle":"🏡","JAMBO":"⛵","111 J":"🏢" };
+const COLORS = {
+  "Papá":    { bg:"#E6F1FB", text:"#0C447C", border:"#378ADD" },
+  "Mamá":    { bg:"#EEEDFE", text:"#3C3489", border:"#7F77DD" },
+  "Pach":    { bg:"#EAF3DE", text:"#27500A", border:"#639922" },
+  "Casilda": { bg:"#FAEEDA", text:"#633806", border:"#BA7517" },
+  "Marina":  { bg:"#FBEAF0", text:"#72243E", border:"#D4537E" },
+  "Pelón":   { bg:"#FAECE7", text:"#712B13", border:"#D85A30" },
+  "Pablo":   { bg:"#E1F5EE", text:"#085041", border:"#1D9E75" },
+};
+const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
+let reservations = {};
+let activeProp = "Valle";
+let view = "calendar";
+let year, month, pendingCancel = null;
+
+const now = new Date();
+year = now.getFullYear();
+month = now.getMonth();
+
+function todayStr() {
+  const d = new Date();
+  return fmt(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function fmt(y, m, d) {
+  return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+function datesInRange(start, end) {
+  const s = new Date(start+"T12:00:00"), e = new Date(end+"T12:00:00");
+  const days = [];
+  for (let d = new Date(s); d <= e; d.setDate(d.getDate()+1))
+    days.push(fmt(d.getFullYear(), d.getMonth(), d.getDate()));
+  return days;
+}
+
+function buildTabs() {
+  document.getElementById('propTabs').innerHTML = PROPS.map(p =>
+    `<button class="prop-tab ${p===activeProp?'active':''}" onclick="window.setProp('${p}')">${ICONS[p]} ${p}</button>`
+  ).join('');
+}
+function buildLegend() {
+  document.getElementById('legendChips').innerHTML = MEMBERS.map(m =>
+    `<span class="legend-chip" style="background:${COLORS[m].bg};color:${COLORS[m].text}">${m}</span>`
+  ).join('');
+}
+
+window.setProp = p => { activeProp = p; buildTabs(); render(); };
+window.prevMonth = () => { if (month===0){month=11;year--;}else month--; render(); };
+window.nextMonth = () => { if (month===11){month=0;year++;}else month++; render(); };
+window.toggleView = () => {
+  view = view==='calendar'?'list':'calendar';
+  document.getElementById('toggleViewBtn').textContent = view==='calendar'?'Lista':'Calendario';
+  render();
+};
+window.showForm = () => {
+  view = 'form';
+  document.getElementById('toggleViewBtn').textContent = 'Lista';
+  render();
+};
+
+function showToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast'+(isError?' error':'');
+  el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3500);
+}
+
+function propRes() {
+  return Object.entries(reservations)
+    .filter(([,r])=>r.prop===activeProp)
+    .map(([id,r])=>({...r,id}));
+}
+function getResForDay(dateStr) {
+  return propRes().filter(r=>datesInRange(r.start,r.end).includes(dateStr));
+}
+
+function render() {
+  document.getElementById('monthLabel').textContent = `${MONTHS[month]} ${year}`;
+  ['calView','listView','formView'].forEach(id=>document.getElementById(id).style.display='none');
+  if (view==='calendar') renderCalendar();
+  else if (view==='list') renderList();
+  else renderForm();
+}
+
+function renderCalendar() {
+  const el = document.getElementById('calView');
+  el.style.display = 'block';
+  const days = new Date(year,month+1,0).getDate();
+  const firstDay = new Date(year,month,1).getDay();
+  let html = `<div class="cal-grid">`;
+  DAYS.forEach(d=>html+=`<div class="cal-day-name">${d}</div>`);
+  for(let i=0;i<firstDay;i++) html+=`<div class="cal-cell empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=fmt(year,month,d);
+    const isToday=ds===todayStr();
+    const isWeekend=[0,6].includes(new Date(ds+"T12:00:00").getDay());
+    const res=getResForDay(ds);
+    html+=`<div class="cal-cell ${isToday?'today':''} ${isWeekend?'weekend':''}"><div class="cal-num">${d}</div>`;
+    res.forEach(r=>{
+      const c=COLORS[r.member];
+      html+=`<div class="res-chip" style="background:${c.bg};color:${c.text}">${r.member}</div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+function renderList() {
+  const el = document.getElementById('listView');
+  el.style.display = 'block';
+  const res = propRes().sort((a,b)=>a.start.localeCompare(b.start));
+  if(!res.length){ el.innerHTML=`<p style="text-align:center;color:#8e8e93;font-size:14px;margin-top:32px">No hay reservas para ${activeProp}</p>`; return; }
+  el.innerHTML = res.map(r=>{
+    const c=COLORS[r.member];
+    return `<div class="list-item" style="border-left-color:${c.border}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <span class="list-name">${r.member}</span>
+          <span class="badge" style="background:${c.bg};color:${c.text}">${ICONS[r.prop]} ${r.prop}</span>
+          <div class="list-dates">${r.start} → ${r.end}</div>
+          ${r.note?`<div class="list-note">${r.note}</div>`:''}
+        </div>
+        <button class="btn-cancel" onclick="window.tryCancel('${r.id}','${r.member}')">Cancelar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderForm() {
+  const el = document.getElementById('formView');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="form-card">
+      <h3>Nueva reserva — ${ICONS[activeProp]} ${activeProp}</h3>
+      <label>¿Quién reserva?</label>
+      <select id="fMember">${MEMBERS.map(m=>`<option>${m}</option>`).join('')}</select>
+      <div class="date-row">
+        <div><label>Llegada</label><input type="date" id="fStart"></div>
+        <div><label>Salida</label><input type="date" id="fEnd"></div>
+      </div>
+      <label>Nota (opcional)</label>
+      <input type="text" id="fNote" placeholder="Ej. Cumpleaños, vacaciones...">
+      <button class="btn-back" onclick="window.toggleView()">Cancelar</button>
+      <button class="btn-book" onclick="window.bookReservation()">Confirmar reserva</button>
+    </div>`;
+}
+
+window.bookReservation = function() {
+  const member = document.getElementById('fMember').value;
+  const start  = document.getElementById('fStart').value;
+  const end    = document.getElementById('fEnd').value;
+  const note   = document.getElementById('fNote').value;
+  if(!start||!end) return showToast('Selecciona fechas de inicio y fin',true);
+  if(start>end) return showToast('La fecha de inicio debe ser antes del fin',true);
+  const range = datesInRange(start,end);
+  const conflict = propRes().find(r=>datesInRange(r.start,r.end).some(d=>range.includes(d)));
+  if(conflict) return showToast(`Ya hay una reserva de ${conflict.member} en esas fechas`,true);
+  push(ref(db,'reservations'),{prop:activeProp,member,start,end,note:note||''});
+  view='calendar';
+  document.getElementById('toggleViewBtn').textContent='Lista';
+  showToast(`Reserva de ${member} confirmada en ${activeProp}`);
+  render();
+};
+
+window.tryCancel = function(id, member) {
+  pendingCancel = {id,member};
+  document.getElementById('cancelModalMsg').textContent =
+    `Para cancelar la reserva de ${member}, escribe las primeras 3 letras del nombre:`;
+  document.getElementById('pinInput').value = '';
+  document.getElementById('cancelModal').style.display = 'flex';
+};
+window.closeModal = function() {
+  document.getElementById('cancelModal').style.display = 'none';
+  pendingCancel = null;
+};
+window.confirmCancel = function() {
+  if(!pendingCancel) return;
+  const pin   = pendingCancel.member.slice(0,3).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const input = document.getElementById('pinInput').value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  if(input!==pin) return showToast('Clave incorrecta — intenta de nuevo',true);
+  remove(ref(db,`reservations/${pendingCancel.id}`));
+  closeModal();
+  showToast('Reserva cancelada');
+};
+
+onValue(ref(db,'reservations'), snapshot => {
+  document.getElementById('loading').style.display = 'none';
+  reservations = snapshot.val() || {};
+  render();
+});
+
+buildTabs();
+buildLegend();
+render();
+</script>
+</body>
+</html>
