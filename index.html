@@ -27,6 +27,8 @@
   .cal-cell { min-height: 50px; border-radius: 8px; padding: 4px 3px; background: white; border: 0.5px solid #e8e8e8; }
   .cal-cell.weekend { background: #f9f9f9; }
   .cal-cell.today { background: #EEEDFE; border: 1.5px solid #7F77DD; }
+ .cal-cell.holiday { background: #FFF3CD; border: 0.5px solid #BA7517; }
+.cal-cell.holiday .cal-num { color: #633806; font-weight: 600; }
   .cal-cell.empty { background: transparent; border: none; }
   .cal-num { font-size: 11px; color: #8e8e93; margin-bottom: 2px; }
   .cal-cell.today .cal-num { color: #3C3489; font-weight: 600; }
@@ -136,6 +138,21 @@ const COLORS = {
   "Pablin":   { bg:"#E1F5EE", text:"#085041", border:"#1D9E75" },
 };
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+ const HOLIDAYS = {
+  "01-01": "Año Nuevo",
+  "02-03": "Constitución",
+  "03-17": "Benito Juárez",
+  "05-01": "Día del Trabajo",
+  "09-16": "Independencia",
+  "11-18": "Revolución",
+  "12-25": "Navidad",
+  "04-17": "Jueves Santo 2026",
+  "04-18": "Viernes Santo 2026",
+};
+function isHoliday(dateStr) {
+  const mmdd = dateStr.slice(5);
+  return HOLIDAYS[mmdd] || null;
+}
 const DAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
 let reservations = {};
@@ -225,7 +242,8 @@ function renderCalendar() {
     const isToday=ds===todayStr();
     const isWeekend=[0,6].includes(new Date(ds+"T12:00:00").getDay());
     const res=getResForDay(ds);
-    html+=`<div class="cal-cell ${isToday?'today':''} ${isWeekend?'weekend':''}"><div class="cal-num">${d}</div>`;
+    const holiday = isHoliday(ds);
+html+=`<div class="cal-cell ${isToday?'today':''} ${isWeekend?'weekend':''} ${holiday?'holiday':''}" title="${holiday||''}">"><div class="cal-num">${d}</div>`;
     res.forEach(r=>{
       const c=COLORS[r.member];
       html+=`<div class="res-chip" style="background:${c.bg};color:${c.text}">${r.member}</div>`;
