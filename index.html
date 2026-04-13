@@ -138,15 +138,24 @@ const COLORS = {
   "Pablo": { bg:"#E1F5EE", text:"#085041", border:"#1D9E75" },
 };
 const HOLIDAYS = {
-  "01-01": "Año Nuevo",
-  "02-03": "Constitución",
-  "03-17": "Benito Juárez",
-  "05-01": "Día del Trabajo",
-  "09-16": "Independencia",
-  "11-18": "Revolución",
-  "12-25": "Navidad",
-  "04-17": "Jueves Santo 2026",
-  "04-18": "Viernes Santo 2026",
+  "2026-01-01": "Año Nuevo",
+  "2026-02-02": "Constitución",
+  "2026-03-16": "Benito Juárez",
+  "2026-04-02": "Jueves Santo",
+  "2026-04-03": "Viernes Santo",
+  "2026-05-01": "Día del Trabajo",
+  "2026-09-16": "Independencia",
+  "2026-11-16": "Revolución",
+  "2026-12-25": "Navidad",
+  "2027-01-01": "Año Nuevo",
+  "2027-02-01": "Constitución",
+  "2027-03-15": "Benito Juárez",
+  "2027-03-25": "Jueves Santo",
+  "2027-03-26": "Viernes Santo",
+  "2027-05-01": "Día del Trabajo",
+  "2027-09-16": "Independencia",
+  "2027-11-15": "Revolución",
+  "2027-12-25": "Navidad",
 };
 const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
@@ -175,8 +184,7 @@ function datesInRange(start, end) {
   return days;
 }
 function isHoliday(dateStr) {
-  const mmdd = dateStr.slice(5);
-  return HOLIDAYS[mmdd] || null;
+  return HOLIDAYS[dateStr] || null;
 }
 
 function buildTabs() {
@@ -245,6 +253,7 @@ function renderCalendar() {
     const res = getResForDay(ds);
     html+=`<div class="cal-cell ${isToday?'today':''} ${isWeekend?'weekend':''} ${holiday?'holiday':''}" title="${holiday||''}">`;
     html+=`<div class="cal-num">${d}</div>`;
+    if(holiday) html+=`<div style="font-size:8px;background:#BA7517;color:#fff;border-radius:3px;padding:1px 3px;margin-bottom:1px;">puente</div>`;
     res.forEach(r=>{
       const c = COLORS[r.member] || { bg:"#eee", text:"#333" };
       html+=`<div class="res-chip" style="background:${c.bg};color:${c.text}">${r.member}</div>`;
