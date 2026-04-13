@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Reservas Familia</title>
- <link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" href="icon.png">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; min-height: 100vh; }
@@ -27,9 +25,9 @@
   .cal-cell { min-height: 50px; border-radius: 8px; padding: 4px 3px; background: white; border: 0.5px solid #e8e8e8; }
   .cal-cell.weekend { background: #f9f9f9; }
   .cal-cell.today { background: #EEEDFE; border: 1.5px solid #7F77DD; }
- .cal-cell.holiday { background: #FFF3CD; border: 0.5px solid #BA7517; }
-.cal-cell.holiday .cal-num { color: #633806; font-weight: 600; }
   .cal-cell.empty { background: transparent; border: none; }
+  .cal-cell.holiday { background: #FFF3CD; border: 0.5px solid #BA7517; }
+  .cal-cell.holiday .cal-num { color: #633806; font-weight: 600; }
   .cal-num { font-size: 11px; color: #8e8e93; margin-bottom: 2px; }
   .cal-cell.today .cal-num { color: #3C3489; font-weight: 600; }
   .res-chip { font-size: 9px; border-radius: 3px; padding: 1px 3px; margin-bottom: 1px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; }
@@ -125,20 +123,19 @@ const cfg = {
 const app = initializeApp(cfg);
 const db = getDatabase(app);
 
-const MEMBERS = ["Papá","Mamá","Pach","Cas","China","Pelón","Pablin"];
-const PROPS = ["Valle","Jambo","111 J"];
-const ICONS = { "Valle":"🏡","Jambo":"⛵","111 J":"🏢" };
+const MEMBERS = ["Papá","Mamá","Pach","Casilda","Marina","Pelón","Pablo"];
+const PROPS = ["Valle","JAMBO","111 J"];
+const ICONS = { "Valle":"🏡","JAMBO":"⛵","111 J":"🏢" };
 const COLORS = {
   "Papá":    { bg:"#E6F1FB", text:"#0C447C", border:"#378ADD" },
   "Mamá":    { bg:"#EEEDFE", text:"#3C3489", border:"#7F77DD" },
   "Pach":    { bg:"#EAF3DE", text:"#27500A", border:"#639922" },
-  "Cas": { bg:"#FAEEDA", text:"#633806", border:"#BA7517" },
-  "China":  { bg:"#FBEAF0", text:"#72243E", border:"#D4537E" },
+  "Casilda": { bg:"#FAEEDA", text:"#633806", border:"#BA7517" },
+  "Marina":  { bg:"#FBEAF0", text:"#72243E", border:"#D4537E" },
   "Pelón":   { bg:"#FAECE7", text:"#712B13", border:"#D85A30" },
-  "Pablin":   { bg:"#E1F5EE", text:"#085041", border:"#1D9E75" },
+  "Pablo":   { bg:"#E1F5EE", text:"#085041", border:"#1D9E75" },
 };
-const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
- const HOLIDAYS = {
+const HOLIDAYS = {
   "01-01": "Año Nuevo",
   "02-03": "Constitución",
   "03-17": "Benito Juárez",
@@ -153,6 +150,7 @@ function isHoliday(dateStr) {
   const mmdd = dateStr.slice(5);
   return HOLIDAYS[mmdd] || null;
 }
+const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
 let reservations = {};
@@ -242,8 +240,7 @@ function renderCalendar() {
     const isToday=ds===todayStr();
     const isWeekend=[0,6].includes(new Date(ds+"T12:00:00").getDay());
     const res=getResForDay(ds);
-    const holiday = isHoliday(ds);
-html+=`<div class="cal-cell ${isToday?'today':''} ${isWeekend?'weekend':''} ${holiday?'holiday':''}" title="${holiday||''}">"><div class="cal-num">${d}</div>`;
+    html+=`<div class="cal-cell ${isToday?'today':''} ${isWeekend?'weekend':''} ${holiday?'holiday':''}" title="${holiday||''}"><div class="cal-num">${d}</div>`;
     res.forEach(r=>{
       const c=COLORS[r.member];
       html+=`<div class="res-chip" style="background:${c.bg};color:${c.text}">${r.member}</div>`;
