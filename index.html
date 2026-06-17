@@ -299,6 +299,13 @@ function renderForm() {
       </div>
       <label>Nota (opcional)</label>
       <input type="text" id="fNote" placeholder="Ej. Cumpleaños, vacaciones...">
+      <div id="conflictConfirm" style="display:none;background:#FFF3CD;border:1px solid #BA7517;border-radius:10px;padding:12px;margin-bottom:12px;">
+        <p id="conflictMsg" style="font-size:13px;color:#633806;margin-bottom:10px;"></p>
+        <div style="display:flex;gap:8px;">
+          <button onclick="window.cancelShared()" style="flex:1;padding:8px;border-radius:8px;border:1px solid #BA7517;background:white;color:#633806;font-size:13px;cursor:pointer;">Cancelar</button>
+          <button onclick="window.confirmShared()" style="flex:1;padding:8px;border-radius:8px;border:none;background:#BA7517;color:white;font-size:13px;font-weight:600;cursor:pointer;">Sí, compartir</button>
+        </div>
+      </div>
       <button class="btn-back" onclick="window.toggleView()">Cancelar</button>
       <button class="btn-book" onclick="window.bookReservation()">Confirmar reserva</button>
     </div>`;
@@ -312,14 +319,37 @@ window.bookReservation = function() {
   if(!start||!end) return showToast('Selecciona fechas de inicio y fin',true);
   if(start>end) return showToast('La fecha de inicio debe ser antes del fin',true);
   const range = datesInRange(start,end);
-  const conflict = propRes().find(r=>datesInRange(r.start,r.end).some(d=>range.includes(d)));
-  if(conflict) return showToast(`Ya hay una reserva de ${conflict.member} en esas fechas`,true);
+  const conflicts = propRes().filter(r=>datesInRange(r.start,r.end).some(d=>range.includes(d)));
+  if(conflicts.length > 0) {
+    const names = [...new Set(conflicts.map(r=>r.member))].join(', ');
+    const confirmBox = document.getElementById('conflictConfirm');
+    document.getElementById('conflictMsg').textContent =
+      `⚠️ ${names} ya tiene${conflicts.length>1?'n':''} apartada esta propiedad en esas fechas. ¿Quieres compartirla?`;
+    confirmBox.style.display = 'block';
+    window._pendingBooking = {member,start,end,note};
+    return;
+  }
+  confirmBooking(member,start,end,note);
+};
+
+window.confirmShared = function() {
+  const {member,start,end,note} = window._pendingBooking;
+  document.getElementById('conflictConfirm').style.display = 'none';
+  confirmBooking(member,start,end,note);
+};
+
+window.cancelShared = function() {
+  document.getElementById('conflictConfirm').style.display = 'none';
+  window._pendingBooking = null;
+};
+
+function confirmBooking(member,start,end,note) {
   push(ref(db,'reservations'),{prop:activeProp,member,start,end,note:note||''});
   view='calendar';
   document.getElementById('toggleViewBtn').textContent='Lista';
   showToast(`Reserva de ${member} confirmada en ${activeProp}`);
   render();
-};
+}
 
 window.tryCancel = function(id, member) {
   pendingCancel = {id,member};
